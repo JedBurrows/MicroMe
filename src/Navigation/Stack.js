@@ -2,10 +2,23 @@ import { createStackNavigator, createAppContainer } from "react-navigation";
 import { Login } from "../components/screens";
 import TabContainer from "./Tabs";
 
+
 const AppNavigator = createStackNavigator({
-    Login: Login,
-    Main: TabContainer
-},{
+    Login: {
+      screen: Login,
+     navigationOptions: () => ({
+      header: null,
+      headerBackTitle: null
+     })
+    },
+    Main: {
+      screen: TabContainer,
+      navigationOptions: () => ({
+        headerLeft: null
+       })
+    }
+},
+{
     defaultNavigationOptions: {
         title: "MicroMe",
         headerStyle: {
