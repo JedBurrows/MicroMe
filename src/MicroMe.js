@@ -8,7 +8,6 @@ class MicroMe extends React.Component{
     render(){
         return (
             <View>
-                <Text>Hello</Text>
                 <TabContainer />
             </View>
         );
