@@ -1,64 +1,43 @@
-import React from "react";
-import { View, Text, TouchableOpacity, TextInput, StyleSheet, KeyboardAvoidingView, AsyncStorage } from "react-native";
-//import { LoginForm } from "../containers/";
+import React from 'react';
+import { View, Text, TouchableOpacity, TextInput, StyleSheet, KeyboardAvoidingView } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-class Login extends React.Component {
-
+export default class Signup extends React.Component {
     constructor(props) {
         super(props);
+
         this.state = {
             username: String,
             password: String,
+            confirmedPassword: String
         }
-
     }
 
-    login() {
-        fetch('http://ip/users', {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                username: this.state.username,
-                password: this.state.password
+    signup() {
+        if (this.state.password === this.state.confirmedPassword) {
+            fetch('http://ip/users/signup', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: this.state.username,
+                    password: this.state.password
+                })
             })
-        })
+                .then((response) => response.json())
+                .then((res) => {
 
-            .then((response) => response.json())
-            .then((res) => {
-
-                if (res.success === true) {
-                    try {
-                        AsyncStorage.setItem('user', res.user);
-                    }
-                    catch (err) {
-                        console.log(err);
-                    }
-                    this.props.navigation.navigate('Main');
-                }
-                else {
                     alert(res.message);
-                }
-            })
-            .done();
-    }
-
-    componentDidMount() {
-        this._loadInitialState().done();
-    }
-
-    async _loadInitialState() {
-        try {
-            const value = await AsyncStorage.getItem(user);
-            if (value !== null) {
-                this.props.navigation.navigate('Main');
-            }
+                    if(res.success){
+                        this.props.navigation.navigate('Main');
+                    }
+                })
+                .done();
         }
-        catch (err) {
-            console.log(err);
+        else{
+            alert("Passwords do not match!");
         }
     }
 
@@ -75,7 +54,7 @@ class Login extends React.Component {
                                 placeholderTextColor='rgba(0,0,0,0.8)'
                                 style={styles.textInput}
                                 underlineColorAndroid={'transparent'}
-                                onChangeText={(username) => this.setState({username: username.trim()})}
+                                onChangeText={(username) => this.setState({ username: username.trim() })}
 
                             />
                         </View>
@@ -92,11 +71,23 @@ class Login extends React.Component {
                             />
                         </View>
 
+                        <View style={styles.textInputContainer}>
+                            <Icon name={"lock"} size={18} color="#000" />
+                            <TextInput
+                                placeholder='Confirm Password'
+                                placeholderTextColor='rgba(0,0,0,0.8)'
+                                style={styles.textInput}
+                                underlineColorAndroid={'transparent'}
+                                secureTextEntry={true}
+                                onChangeText={(confirmedPassword) => this.setState({ confirmedPassword })}
+                            />
+                        </View>
+
                         <TouchableOpacity style={styles.button}
                             onPress={() => {
-                                this.login();
+                                this.signup();
                             }}>
-                            <Text style={styles.btnText}>Login</Text>
+                            <Text style={styles.btnText}>Sign Up!</Text>
                         </TouchableOpacity>
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
                             <Text style={{ paddingRight: 10 }} onPress={
@@ -106,16 +97,16 @@ class Login extends React.Component {
                             }>Forgot your password?</Text>
                             <Text onPress={
                                 () => {
-                                    this.props.navigation.navigate('Signup');
-                                }}>Signup</Text>
+                                    this.props.navigation.navigate('Login');
+                                }}>Login</Text>
                         </View>
                     </View>
                 </View>
             </KeyboardAvoidingView>
         )
     }
-}
 
+}
 
 const styles = StyleSheet.create({
     container: {
@@ -179,5 +170,3 @@ const styles = StyleSheet.create({
         alignItems: 'center'
     }
 })
-
-export default Login;
