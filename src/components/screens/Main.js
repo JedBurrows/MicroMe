@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { View, Text, StyleSheet, Image, Platform } from "react-native";
 import { Constants, Location, Permissions } from 'expo';
 import Icon from 'react-native-vector-icons/Entypo';
-import MapView, { Marker } from "react-native-maps";
+import MapView, { Marker, Polyline as MapPolyline } from "react-native-maps";
 import { MapButton } from "../containers/";
 import { styles } from "../screens/Styles";
 import Polyline from '@mapbox/polyline';
@@ -18,6 +18,12 @@ class Main extends Component {
         super(props);
 
         this.state = {
+            region:{
+                latitude: 0,
+                longitude: 0,
+                latitudeDelta: 0,
+                longitudeDelta: 0
+            },
             location: {
                 latitude: 0,
                 longitude: 0,
@@ -29,7 +35,9 @@ class Main extends Component {
                 longitude: 0
             },
             coords: [],
-            markers: []
+            markers: [],
+            isTracking: false,
+            trackingPoints: []
         }
         this.handlePress = this.handlePress.bind(this);
     }
@@ -78,7 +86,13 @@ class Main extends Component {
             location: {
                 latitude: currentLoc.coords.latitude,
                 longitude: currentLoc.coords.longitude,
-                latitudeDelta: 0.0009,
+                latitudeDelta: 0.09,
+                longitudeDelta: 0.09
+            },
+            region:{
+                latitude: currentLoc.coords.latitude,
+                longitude: currentLoc.coords.longitude,
+                latitudeDelta: 0.009,
                 longitudeDelta: 0.009
             },
             markerPosition: {
@@ -93,8 +107,39 @@ class Main extends Component {
         navigator.geolocation.clearWatch(this.watchID);
     }
 
-    handleMapButtonPress() {
-        alert("functioncall");
+    handleMapButtonPress = () => {
+        this.setState({ isTracking: !this.state.isTracking }, () => {
+            if (this.state.isTracking === true) {
+                alert('beginning tracking');
+                let interval = setInterval(() => {
+                    if (this.state.isTracking === false) {
+                        alert("stopping tracking");
+                        clearInterval(interval);
+                    }
+                    console.log('adding marker');
+                    this.setState({
+                        markers: [
+                            ... this.state.markers,
+                            {
+                                coordinate: this.state.markerPosition
+                            }
+                        ]
+                    })
+                }, 5000);
+            }
+        })
+    }
+
+    trackUser() {
+        alert('adding marker');
+        this.setState({
+            markers: [
+                ... this.state.markers,
+                {
+                    coordinate: this.state.markerPosition
+                }
+            ]
+        })
     }
 
     static navigationOptions = {
@@ -116,16 +161,20 @@ class Main extends Component {
                 }
             ]
         })
-        this.getDirections("55.814018,-4.322100", `${e.nativeEvent.coordinate.latitude},${e.nativeEvent.coordinate.longitude}`);
+        // this.getDirections("55.814018,-4.322100", `${e.nativeEvent.coordinate.latitude},${e.nativeEvent.coordinate.longitude}`);
     }
 
+    onRegionChange(region){
+        this.setState({ region });
+    }
 
 
     render() {
         return (
             <View style={styles.container}>
                 <MapView style={styles.map}
-                    region={this.state.location}
+                    region={this.state.region}
+                    onRegionChangeComplete={this.onRegionChange.bind(this)}
                     onPress={this.handlePress}
                 >
                     <Marker
@@ -143,10 +192,20 @@ class Main extends Component {
                             coordinate={marker.coordinate}
                         />
                     ))}
-                    <MapView.Polyline
-                        coordinates={this.state.coords}
-                        strokeWidth={3}
-                        strokeColor="84D2F6" />
+
+                    <MapPolyline
+                        coordinates={this.state.markers}
+                        strokeColor="#000" // fallback for when `strokeColors` is not supported by the map-provider
+                        strokeColors={[
+                            '#7F0000',
+                            '#00000000', // no color, creates a "long" gradient between the previous and next coordinate
+                            '#B24112',
+                            '#E5845C',
+                            '#238C23',
+                            '#7F0000'
+                        ]}
+                        strokeWidth={6}
+                    />
                 </MapView>
                 <View>
                     <MapButton style={{
@@ -161,7 +220,7 @@ class Main extends Component {
                         borderRadius: 40,
                         top: 200,
                         left: 100
-                    }} handlePress={this.handleMapButtonPress} />
+                    }} handlePress={this.handleMapButtonPress.bind(this)} />
 
                 </View>
 

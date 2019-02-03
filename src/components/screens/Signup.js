@@ -13,9 +13,31 @@ export default class Signup extends React.Component {
         }
     }
 
+    validateData(){
+        if(this.state.password !== this.state.confirmedPassword){
+            alert('Passwords do not match!');
+            return false;
+        }
+
+        else if(this.state.password.length < 4){
+            alert('Password needs to have at least 4 characters!');
+            return false;
+        }
+        else{
+            const regex = /^[a-zA-Z0-9]{3,}$/;
+            if(!regex.test(this.state.username)){
+                alert('username contains invalid characters');
+                return false;
+            }
+            else{
+                return true;
+            }
+        }
+    }
+
     signup() {
-        if (this.state.password === this.state.confirmedPassword) {
-            fetch('http://ip/users/signup', {
+        if (this.validateData() === true) {
+            fetch('http://ip:3000/users/signup', {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
@@ -34,10 +56,8 @@ export default class Signup extends React.Component {
                         this.props.navigation.navigate('Main');
                     }
                 })
+                
                 .done();
-        }
-        else{
-            alert("Passwords do not match!");
         }
     }
 
