@@ -15,7 +15,7 @@ class Login extends React.Component {
     }
 
     login() {
-        fetch('http://ip:3000/users', {
+        fetch('http://151.231.2.64:3000/users', {
             method: 'POST',
             headers: {
                 'Accept': 'application/json',

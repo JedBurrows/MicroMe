@@ -37,7 +37,7 @@ export default class Signup extends React.Component {
 
     signup() {
         if (this.validateData() === true) {
-            fetch('http://ip:3000/users/signup', {
+            fetch('http://151.231.2.64:3000/users/signup', {
                 method: 'POST',
                 headers: {
                     'Accept': 'application/json',
