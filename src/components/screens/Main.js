@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { View, Text, StyleSheet, Image, Platform } from "react-native";
+import { View, Text, StyleSheet, Image, Platform, Alert } from "react-native";
 import { Constants, Location, Permissions } from 'expo';
 import Icon from 'react-native-vector-icons/Entypo';
 import MapView, { Marker, Polyline as MapPolyline } from "react-native-maps";
@@ -18,26 +18,19 @@ class Main extends Component {
         super(props);
 
         this.state = {
-            region:{
+            region: {
                 latitude: 0,
                 longitude: 0,
-                latitudeDelta: 0,
-                longitudeDelta: 0
-            },
-            location: {
-                latitude: 0,
-                longitude: 0,
-                latitudeDelta: 0,
-                longitudeDelta: 0
+                latitudeDelta: 0.009,
+                longitudeDelta: 0.009
             },
             markerPosition: {
                 latitude: 0,
                 longitude: 0
             },
-            coords: [],
             markers: [],
+            coords: [],
             isTracking: false,
-            trackingPoints: []
         }
         this.handlePress = this.handlePress.bind(this);
     }
@@ -81,31 +74,33 @@ class Main extends Component {
             });
         }
 
-        let currentLoc = await Location.getCurrentPositionAsync({});
-        this.setState({
-            location: {
-                latitude: currentLoc.coords.latitude,
-                longitude: currentLoc.coords.longitude,
-                latitudeDelta: 0.09,
-                longitudeDelta: 0.09
-            },
-            region:{
-                latitude: currentLoc.coords.latitude,
-                longitude: currentLoc.coords.longitude,
-                latitudeDelta: 0.009,
-                longitudeDelta: 0.009
-            },
-            markerPosition: {
-                latitude: currentLoc.coords.latitude,
-                longitude: currentLoc.coords.longitude,
+        //let currentLoc = await Location.getCurrentPositionAsync({enableHighAccuracy: true});
+        const options = {
+            accuracy: Location.Accuracy.BestForNavigation,
+            timeInterval: 5000,
+            distanceInterval: 5
+        }
+        Location.watchPositionAsync(options, (currentLoc) => {
+            console.log(currentLoc.coords);
+            if (this.state.region.latitude !== currentLoc.coords.latitude && this.state.region.longitude !== currentLoc.coords.longitude) {
+                this.setState({
+                    region: {
+                        latitude: currentLoc.coords.latitude,
+                        longitude: currentLoc.coords.longitude,
+                        latitudeDelta: 0.0009,
+                        longitudeDelta: 0.0001
+                    },
+                    markerPosition: {
+                        latitude: currentLoc.coords.latitude,
+                        longitude: currentLoc.coords.longitude,
+                    }
+                }, () => {
+                    console.log('Marker position' + this.state.markerPosition.latitude);
+                })
             }
-        });
+        })
     };
 
-
-    componentWillUnmount() {
-        navigator.geolocation.clearWatch(this.watchID);
-    }
 
     handleMapButtonPress = () => {
         this.setState({ isTracking: !this.state.isTracking }, () => {
@@ -116,29 +111,25 @@ class Main extends Component {
                         alert("stopping tracking");
                         clearInterval(interval);
                     }
-                    console.log('adding marker');
                     this.setState({
                         markers: [
                             ... this.state.markers,
                             {
                                 coordinate: this.state.markerPosition
                             }
+                        ],
+                        coords: [
+                            ... this.state.coords,
+                            {
+                                latitude: this.state.markerPosition.latitude,
+                                longitude: this.state.markerPosition.longitude
+                            }
                         ]
+                    }, () =>{
+                        console.log('adding marker');
                     })
-                }, 5000);
+                }, 2000);
             }
-        })
-    }
-
-    trackUser() {
-        alert('adding marker');
-        this.setState({
-            markers: [
-                ... this.state.markers,
-                {
-                    coordinate: this.state.markerPosition
-                }
-            ]
         })
     }
 
@@ -153,18 +144,14 @@ class Main extends Component {
     };
 
     handlePress(e) {
-        this.setState({
-            markers: [
-                ... this.state.markers,
-                {
-                    coordinate: e.nativeEvent.coordinate
-                }
-            ]
-        })
-        // this.getDirections("55.814018,-4.322100", `${e.nativeEvent.coordinate.latitude},${e.nativeEvent.coordinate.longitude}`);
+        // const newMarkersArray = [...this.state.markers, e.nativeEvent.coordinate];
+        // this.setState({ markers: newMarkersArray })
+        // console.log(this.state.markers);
+
+        console.log(e.nativeEvent.coordinate);
     }
 
-    onRegionChange(region){
+    onRegionChange(region) {
         this.setState({ region });
     }
 
@@ -187,14 +174,14 @@ class Main extends Component {
                             />
                         </View>
                     </Marker>
-                    {this.state.markers.map(marker => (
+                    {/* {this.state.markers.map(marker => (
                         <Marker
                             coordinate={marker.coordinate}
                         />
-                    ))}
+                    ))} */}
 
                     <MapPolyline
-                        coordinates={this.state.markers}
+                        coordinates={this.state.coords}
                         strokeColor="#000" // fallback for when `strokeColors` is not supported by the map-provider
                         strokeColors={[
                             '#7F0000',
@@ -206,6 +193,7 @@ class Main extends Component {
                         ]}
                         strokeWidth={6}
                     />
+
                 </MapView>
                 <View>
                     <MapButton style={{
