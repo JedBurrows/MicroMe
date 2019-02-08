@@ -40,7 +40,7 @@ router.post('/', function (req, res, next) {
           if (resB) {
             res.send({ 'success': true, 'user': row[0].username })
           }
-          else{
+          else {
             res.send({ 'success': false, message: 'Incorrect Username or Password' });
           }
         });
@@ -90,5 +90,38 @@ router.post('/signup', function (req, res, next) {
       }
     })
 });
+
+router.post('/PostRoute', function (req, res, next) {
+  const RouteName = req.body.RouteName;
+  const coords = req.body.coords;
+
+  connection.query(
+    "SELECT * FROM microme.routes WHERE Name = ?",
+    [RouteName], function (err, row, field) {
+      if (err) {
+        console.log(err);
+        res.send({ 'success': false, 'message': 'could not connect to database' })
+      }
+      if (row.length > 0) {
+        res.send({ 'success': false, 'message': 'A Route with that name alreadt exists!' })
+
+      }
+      else {
+        connection.query(
+          "INSERT into microme.routes (name, RouteJSON) VALUES (?, ?)",
+          [RouteName, coords], function (err, row, field) {
+
+            if (err) {
+              console.log(err);
+              res.send({ 'success': false, 'message': 'could not connect to database' })
+            }
+            else {
+              res.send({ 'success': true, 'message': 'Route has been saved' })
+            }
+
+          });
+      }
+    })
+})
 
 module.exports = router;

@@ -1,9 +1,9 @@
 import React, { Component } from "react";
-import { View, Text, StyleSheet, Image, Platform, Alert } from "react-native";
+import { View, Text, StyleSheet, Image, Platform  } from "react-native";
 import { Constants, Location, Permissions } from 'expo';
 import Icon from 'react-native-vector-icons/Entypo';
 import MapView, { Marker, Polyline as MapPolyline } from "react-native-maps";
-import { MapButton } from "../containers/";
+import { MapButton, PostRunModal } from "../containers/";
 import { styles } from "../screens/Styles";
 import Polyline from '@mapbox/polyline';
 
@@ -31,6 +31,7 @@ class Main extends Component {
             markers: [],
             coords: [],
             isTracking: false,
+            modalVisible: true
         }
         this.handlePress = this.handlePress.bind(this);
     }
@@ -73,29 +74,32 @@ class Main extends Component {
                 errorMessage: 'Permission to access location was denied',
             });
         }
+        this.showDialog
 
         //let currentLoc = await Location.getCurrentPositionAsync({enableHighAccuracy: true});
         const options = {
             accuracy: Location.Accuracy.BestForNavigation,
             timeInterval: 5000,
-            distanceInterval: 5
+            distanceInterval: 0
         }
         Location.watchPositionAsync(options, (currentLoc) => {
             console.log(currentLoc.coords);
-            if (this.state.region.latitude !== currentLoc.coords.latitude && this.state.region.longitude !== currentLoc.coords.longitude) {
+            if (this.state.region.latitude === 0 && this.state.region.longitude === 0) {
                 this.setState({
                     region: {
                         latitude: currentLoc.coords.latitude,
                         longitude: currentLoc.coords.longitude,
                         latitudeDelta: 0.0009,
                         longitudeDelta: 0.0001
-                    },
+                    }
+                })
+            }
+            else if(this.state.markerPosition.latitude !== currentLoc.latitude){
+                this.setState({
                     markerPosition: {
                         latitude: currentLoc.coords.latitude,
                         longitude: currentLoc.coords.longitude,
                     }
-                }, () => {
-                    console.log('Marker position' + this.state.markerPosition.latitude);
                 })
             }
         })
@@ -109,6 +113,11 @@ class Main extends Component {
                 let interval = setInterval(() => {
                     if (this.state.isTracking === false) {
                         alert("stopping tracking");
+                        this.setState({
+                            modalVisible: true
+                        },() =>{
+                            this.showDialog();
+                        })
                         clearInterval(interval);
                     }
                     this.setState({
@@ -159,6 +168,7 @@ class Main extends Component {
     render() {
         return (
             <View style={styles.container}>
+                <PostRunModal modalVisible={this.state.modalVisible} coords={this.state.coords}/>
                 <MapView style={styles.map}
                     region={this.state.region}
                     onRegionChangeComplete={this.onRegionChange.bind(this)}
@@ -179,6 +189,7 @@ class Main extends Component {
                             coordinate={marker.coordinate}
                         />
                     ))} */}
+
 
                     <MapPolyline
                         coordinates={this.state.coords}

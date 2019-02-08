@@ -1,5 +1,6 @@
 import MapButton from "./MapButton.js";
 import ProfilePicture from "./ProfilePicture.js";
-//import LoginForm from "./LoginForm.js";
+import PostRunModal from './PostRunModal';
 
-export { MapButton, ProfilePicture };
+
+export { MapButton, ProfilePicture, PostRunModal };
