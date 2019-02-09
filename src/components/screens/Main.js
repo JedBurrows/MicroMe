@@ -30,7 +30,7 @@ class Main extends Component {
             markers: [],
             coords: [],
             isTracking: false,
-            modalVisible: true
+            modalVisible: false
         }
         this.handlePress = this.handlePress.bind(this);
     }
@@ -180,11 +180,11 @@ class Main extends Component {
                             />
                         </View>
                     </Marker>
-                    {this.state.markers.map(marker => (
+                    {/* {this.state.markers.map(marker => (
                         <Marker
                             coordinate={marker.coordinate}
                         />
-                    ))}
+                    ))} */}
 
 
                     <MapPolyline

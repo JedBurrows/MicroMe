@@ -76,34 +76,42 @@ export default class PostRunModal extends React.Component {
                     this.hideModal();
                 }}>
                 <View style={styles.container}>
-                    <View style={styles.title}>
-                        <Text style={styles.text}>Route Debrief</Text>
-                    </View>
-                    <View style={styles.topSection}>
-                        <View style={styles.icon}>
-                            <Icon name='run' color='#000' size={28} />
-                            <Text style={styles.text}>5 km</Text>
+                    <View style={styles.inner}>
+                        <View style={styles.title}>
+                            <Text style={styles.text}>Route Debrief</Text>
                         </View>
-                        <View style={styles.icon}>
-                            <Icon name='timer-sand' color='#000' size={28} />
-                            <Text style={styles.text}>40 mins 5 sec</Text>
+                        <View style={styles.topSection}>
+                            <View style={styles.icon}>
+                                <Icon name='run' color='#000' size={28} />
+                                <Text style={styles.text}>5 km</Text>
+                            </View>
+                            <View style={styles.icon}>
+                                <Icon name='timer-sand' color='#000' size={28} />
+                                <Text style={styles.text}>40 mins 5 sec</Text>
+                            </View>
                         </View>
+                        <View style={styles.textInputContainer}>
+                            <TextInput
+                                placeholder='RouteName'
+                                placeholderTextColor='rgba(0,0,0,0.8)'
+                                style={styles.textInput}
+                                underlineColorAndroid={'transparent'}
+                                onChangeText={(RouteName) => this.setState({ RouteName })}
+                            />
+                        </View>
+                        <TouchableOpacity style={styles.button}
+                            onPress={() => {
+                                this.postRoute();
+                            }}>
+                            <Text style={styles.btnText}>Save Route</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.closeButton}
+                            onPress={() => {
+                                this.hideModal();
+                            }}>
+                            <Text style={styles.btnText}>Close</Text>
+                        </TouchableOpacity>
                     </View>
-                    <View style={styles.textInputContainer}>
-                        <TextInput
-                            placeholder='RouteName'
-                            placeholderTextColor='rgba(0,0,0,0.8)'
-                            style={styles.textInput}
-                            underlineColorAndroid={'transparent'}
-                            onChangeText={(RouteName) => this.setState({ RouteName })}
-                        />
-                    </View>
-                    <TouchableOpacity style={styles.button}
-                        onPress={() => {
-                            this.postRoute();
-                        }}>
-                        <Text style={styles.btnText}>Save Route</Text>
-                    </TouchableOpacity>
                 </View>
             </Modal>
         );
@@ -112,12 +120,17 @@ export default class PostRunModal extends React.Component {
 
 const styles = StyleSheet.create({
     container: {
-        width: null,
         flexDirection: 'column',
         justifyContent: 'center',
         flex: 1,
         alignSelf: 'stretch',
         alignItems: 'center',
+    },
+    inner:{
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'white'
     },
     textInputContainer: {
         flexDirection: 'row',
@@ -169,5 +182,17 @@ const styles = StyleSheet.create({
     },
     icon: {
         flexDirection: 'row',
+    },
+    closeButton: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'black',
+        borderWidth: .5,
+        borderColor: '#fff',
+        height: 40,
+        borderRadius: 5,
+        margin: 10,
+        alignSelf: 'stretch'
     }
 })
