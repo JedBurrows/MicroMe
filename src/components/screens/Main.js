@@ -1,10 +1,9 @@
 import React, { Component } from "react";
-import { View, Text, StyleSheet, Image, Platform  } from "react-native";
+import { View, Text, StyleSheet, Image, Platform } from "react-native";
 import { Constants, Location, Permissions } from 'expo';
 import Icon from 'react-native-vector-icons/Entypo';
 import MapView, { Marker, Polyline as MapPolyline } from "react-native-maps";
 import { MapButton, PostRunModal } from "../containers/";
-import { styles } from "../screens/Styles";
 import Polyline from '@mapbox/polyline';
 
 
@@ -16,7 +15,7 @@ class Main extends Component {
 
     constructor(props) {
         super(props);
-
+        this.modalElement = React.createRef();
         this.state = {
             region: {
                 latitude: 0,
@@ -25,8 +24,8 @@ class Main extends Component {
                 longitudeDelta: 0.009
             },
             markerPosition: {
-                latitude: 0,
-                longitude: 0
+                latitude: -1,
+                longitude: -1
             },
             markers: [],
             coords: [],
@@ -94,16 +93,18 @@ class Main extends Component {
                     }
                 })
             }
-            else if(this.state.markerPosition.latitude !== currentLoc.latitude){
-                this.setState({
-                    markerPosition: {
-                        latitude: currentLoc.coords.latitude,
-                        longitude: currentLoc.coords.longitude,
-                    }
-                })
-            }
+            this.setState({
+                markerPosition: {
+                    latitude: currentLoc.coords.latitude,
+                    longitude: currentLoc.coords.longitude,
+                }
+            })
         })
     };
+
+    showModal = () => {
+        this.modalElement.current.showModal();
+    }
 
 
     handleMapButtonPress = () => {
@@ -113,12 +114,8 @@ class Main extends Component {
                 let interval = setInterval(() => {
                     if (this.state.isTracking === false) {
                         alert("stopping tracking");
-                        this.setState({
-                            modalVisible: true
-                        },() =>{
-                            this.showDialog();
-                        })
                         clearInterval(interval);
+                        this.showModal();
                     }
                     this.setState({
                         markers: [
@@ -134,7 +131,7 @@ class Main extends Component {
                                 longitude: this.state.markerPosition.longitude
                             }
                         ]
-                    }, () =>{
+                    }, () => {
                         console.log('adding marker');
                     })
                 }, 2000);
@@ -168,7 +165,6 @@ class Main extends Component {
     render() {
         return (
             <View style={styles.container}>
-                <PostRunModal modalVisible={this.state.modalVisible} coords={this.state.coords}/>
                 <MapView style={styles.map}
                     region={this.state.region}
                     onRegionChangeComplete={this.onRegionChange.bind(this)}
@@ -184,11 +180,11 @@ class Main extends Component {
                             />
                         </View>
                     </Marker>
-                    {/* {this.state.markers.map(marker => (
+                    {this.state.markers.map(marker => (
                         <Marker
                             coordinate={marker.coordinate}
                         />
-                    ))} */}
+                    ))}
 
 
                     <MapPolyline
@@ -220,13 +216,63 @@ class Main extends Component {
                         top: 200,
                         left: 100
                     }} handlePress={this.handleMapButtonPress.bind(this)} />
-
                 </View>
-
+                <View style={styles.modal}>
+                    <PostRunModal modalVisible={this.state.modalVisible} coords={this.state.coords} ref={this.modalElement} />
+                </View>
             </View>
         )
     }
 }
+
+const styles = StyleSheet.create({
+    container: {
+        height: 100 + "%",
+        width: 100 + "%",
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center"
+    },
+    map: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        bottom: 0,
+        right: 0
+    },
+    mapbtn: {
+        borderWidth: 1,
+        borderColor: 'rgba(0,0,0,0.2)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: 80,
+        height: 80,
+        top: 520,
+        left: 270,
+        backgroundColor: '#fff',
+        borderRadius: 40,
+    },
+    profiletop: {
+        height: 10,
+        width: 100 + '%',
+
+    },
+    radius: {
+        height: 60,
+        width: 60,
+        borderRadius: 60 / 2,
+        overflow: 'hidden',
+        backgroundColor: 'rgba(0,112,255,0.1)',
+        borderWidth: 1,
+        borderColor: 'rgba(0,223,255,0.3)',
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
+    modal: {
+
+    }
+
+});
 
 
 export default Main;

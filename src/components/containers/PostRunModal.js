@@ -1,6 +1,6 @@
 import React from "react";
-import { View, Text, TouchableHighlight, StyleSheet, Modal, Alert, TextInput } from "react-native";
-import Icon from 'react-native-vector-icons/Entypo';
+import { View, Text, TouchableHighlight, StyleSheet, Modal, Alert, TextInput, TouchableOpacity } from "react-native";
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const icon = <Icon name={"plus"} size={30} color="#01a699" />
 
@@ -15,88 +15,97 @@ export default class PostRunModal extends React.Component {
         }
     }
 
-    setModalVisible = (bool) => {
+    hideModal = () => {
         this.setState({
-            modalVisible: bool
+            modalVisible: false
         })
     }
 
+    showModal = () => {
+        this.setState({
+            modalVisible: true
+        })
+    }
+
+    cleanUpArray = () => {
+        this.props.coords.array.forEach(element => {
+            if (element.latitude == 0 && element.longitude == 0) {
+
+            }
+        });
+    }
+
     postRoute = () => {
-        if(this.state.RouteName === '' || this.state.RouteName === null){
+        if (this.state.RouteName === '' || this.state.RouteName === null) {
             alert('Please enter a valid route name');
         }
-        else{
+        else {
             fetch('http://151.231.2.64:3000/users/PostRoute', {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                RouteName: this.state.RouteName,
-                //coords: this.props.coords
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    RouteName: this.state.RouteName,
+                    coords: JSON.stringify(this.props.coords)
+                })
             })
-        })
 
-            .then((response) => response.json())
-            .then((res) => {
+                .then((response) => response.json())
+                .then((res) => {
 
-                if (res.success === true) {
-                    alert(res.message);
-                }
-                else {
-                    alert(res.message);
-                }
-            })
-            .done();
+                    if (res.success === true) {
+                        alert(res.message);
+                    }
+                    else {
+                        alert(res.message);
+                    }
+                })
+                .done();
         }
     }
 
     render() {
         return (
-            <View style={styles.container}>
-                <Modal
-                    animationType="slide"
-                    transparent={false}
-                    visible={this.state.modalVisible}
-                    onRequestClose={() => {
-                        Alert.alert('Modal has been closed.');
-                    }}>
-                    <View style={{ marginTop: 22 }}>
-                        <View>
-                            <Text>Saving your Route!</Text>
-                            <View style={styles.textInputContainer}>
-                                <TextInput
-                                    placeholder='RouteName'
-                                    placeholderTextColor='rgba(0,0,0,0.8)'
-                                    style={styles.textInput}
-                                    underlineColorAndroid={'transparent'}
-                                    onChangeText={(RouteName) => this.setState({ RouteName })}
-                                />
-                            </View>
-                            <TouchableHighlight
-                                onPress={() => {
-                                    this.setModalVisible(!this.state.modalVisible);
-                                }}>
-                                <Text>Hide Modal</Text>
-                            </TouchableHighlight>
-                            <TouchableHighlight
-                                onPress={() => {
-                                    this.postRoute();
-                                }}>
-                                <Text>Save Route</Text>
-                            </TouchableHighlight>
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={this.state.modalVisible}
+                onRequestClose={() => {
+                    this.hideModal();
+                }}>
+                <View style={styles.container}>
+                    <View style={styles.title}>
+                        <Text style={styles.text}>Route Debrief</Text>
+                    </View>
+                    <View style={styles.topSection}>
+                        <View style={styles.icon}>
+                            <Icon name='run' color='#000' size={28} />
+                            <Text style={styles.text}>5 km</Text>
+                        </View>
+                        <View style={styles.icon}>
+                            <Icon name='timer-sand' color='#000' size={28} />
+                            <Text style={styles.text}>40 mins 5 sec</Text>
                         </View>
                     </View>
-                </Modal>
-
-                <TouchableHighlight
-                    onPress={() => {
-                        this.setModalVisible(true);
-                    }}>
-                    <Text>Show Modal</Text>
-                </TouchableHighlight>
-            </View>
+                    <View style={styles.textInputContainer}>
+                        <TextInput
+                            placeholder='RouteName'
+                            placeholderTextColor='rgba(0,0,0,0.8)'
+                            style={styles.textInput}
+                            underlineColorAndroid={'transparent'}
+                            onChangeText={(RouteName) => this.setState({ RouteName })}
+                        />
+                    </View>
+                    <TouchableOpacity style={styles.button}
+                        onPress={() => {
+                            this.postRoute();
+                        }}>
+                        <Text style={styles.btnText}>Save Route</Text>
+                    </TouchableOpacity>
+                </View>
+            </Modal>
         );
     }
 }
@@ -104,11 +113,11 @@ export default class PostRunModal extends React.Component {
 const styles = StyleSheet.create({
     container: {
         width: null,
+        flexDirection: 'column',
         justifyContent: 'center',
         flex: 1,
         alignSelf: 'stretch',
         alignItems: 'center',
-        backgroundColor: '#84D2F6'
     },
     textInputContainer: {
         flexDirection: 'row',
@@ -123,5 +132,42 @@ const styles = StyleSheet.create({
     },
     textInput: {
         flex: 1,
+    },
+    btnText: {
+        color: '#fff',
+        fontSize: 20
+    }, button: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#84D2F6',
+        borderWidth: .5,
+        borderColor: '#fff',
+        height: 40,
+        borderRadius: 5,
+        margin: 10,
+        alignSelf: 'stretch'
+    },
+    topSection: {
+        alignSelf: 'stretch',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-evenly'
+    },
+    title: {
+        alignItems: 'center',
+        paddingBottom: 10 + '%',
+        height: 5 + '%',
+    },
+    text: {
+        fontSize: 20
+    },
+    textContainer: {
+        justifyContent: 'center',
+        alignItems: 'center',
+
+    },
+    icon: {
+        flexDirection: 'row',
     }
 })
