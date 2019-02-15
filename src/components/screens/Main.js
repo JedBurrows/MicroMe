@@ -6,8 +6,6 @@ import MapView, { Marker, Polyline as MapPolyline, AnimatedRegion } from "react-
 import { MapButton, PostRunModal } from "../containers/";
 import Polyline from '@mapbox/polyline';
 
-import BackgroundGeolocation from 'react-native-background-geolocation';
-
 const screen = Dimensions.get('window');
 const ASPECT_RATIO = screen.width / screen.height;
 const API_KEY = 'AIzaSyAmrK1oa7p6dAZwcqRZJ1Ut4eBI3uw67oU';
@@ -33,7 +31,7 @@ class Main extends Component {
         super(props);
         this.modalElement = React.createRef();
         this.state = {
-            enabled:Boolean,
+            enabled: Boolean,
             isMoving: Boolean,
             showsUserLocation: false,
             location: [],
@@ -51,7 +49,8 @@ class Main extends Component {
             coords: [],
             isTracking: false,
             modalVisible: false,
-            appState: AppState.currentState
+            appState: AppState.currentState,
+            interval: null
         }
         this.handlePress = this.handlePress.bind(this);
     }
@@ -69,15 +68,16 @@ class Main extends Component {
             distanceInterval: 0
         }
         AppState.addEventListener('change', this._handleAppStateChange);
-
-
-    
+        Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, options);
+        const interval = setInterval(this._getLocationAsync, 1000);
+        this.setState({ interval })
     }
 
     componentWillUnmount() {
         Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
         AppState.removeEventListener('change', this._handleAppStateChange);
         BackgroundGeolocation.removeListeners();
+        clearInterval(this.state.interval);
     }
 
 
@@ -87,7 +87,7 @@ class Main extends Component {
             nextAppState === 'active'
         ) {
             console.log('App has come to the foreground!');
-            if (global.length !== 0) {
+            if (global.length > 0) {
                 this.updateCoords();
             }
         }
@@ -95,6 +95,7 @@ class Main extends Component {
             console.log('App is in the background');
             if (this.state.isTracking === true) {
                 global.length = global.locations.length;
+                global.locationOnStateChange = global.locations[0];
                 console.log('setting length');
             }
         }
@@ -128,9 +129,9 @@ class Main extends Component {
                 errorMessage: 'Permission to access location was denied',
             });
         }
-        let currentLoc = global.locations[0];
+        let currentLoc = await global.locations[0];
         if (this.state.region.latitude === 0 && this.state.region.longitude === 0) {
-            this.setState({
+            await this.setState({
                 region: {
                     latitude: currentLoc.coords.latitude,
                     longitude: currentLoc.coords.longitude,
@@ -139,6 +140,7 @@ class Main extends Component {
                 }
             }, () => {
                 this._map.animateToRegion(this.state.region, 1000);
+                console.log('animating to region');
             })
         }
         await this.setState({
@@ -164,8 +166,8 @@ class Main extends Component {
                 coords: [
                     ... this.state.coords,
                     {
-                        latitude: locations[i].coords.latitude,
-                        longitude: locations[i].coords.longitude,
+                        latitude: global.locations[i].coords.latitude,
+                        longitude: global.locations[i].coords.longitude,
                     }
                 ]
             }, () => {
@@ -202,7 +204,11 @@ class Main extends Component {
                             }
                         ]
 
+                    }, () => {
+                        console.log('tracking updated');
                     })
+
+
                 }, 2000);
             }
         })
