@@ -1,15 +1,32 @@
 import React, { Component } from "react";
-import { View, Text, StyleSheet, Image, Platform } from "react-native";
-import { Constants, Location, Permissions } from 'expo';
+import { View, Text, StyleSheet, Image, Platform, AppState, Dimensions } from "react-native";
+import { Constants, Location, Permissions, TaskManager } from 'expo';
 import Icon from 'react-native-vector-icons/Entypo';
-import MapView, { Marker, Polyline as MapPolyline } from "react-native-maps";
+import MapView, { Marker, Polyline as MapPolyline, AnimatedRegion } from "react-native-maps";
 import { MapButton, PostRunModal } from "../containers/";
 import Polyline from '@mapbox/polyline';
 
+import BackgroundGeolocation from 'react-native-background-geolocation';
 
+const screen = Dimensions.get('window');
+//const TRACKER_HOST = 'http://tracker.transistorsoft.com/locations/';
+const ASPECT_RATIO = screen.width / screen.height;
 const API_KEY = 'AIzaSyAmrK1oa7p6dAZwcqRZJ1Ut4eBI3uw67oU';
+const LOCATION_TASK_NAME = 'background-location-task';
 
-
+// TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }) => {
+//     if (error) {
+//         // Error occurred - check `error.message` for more details.
+//         return;
+//     }
+//     if (data) {
+//         const locations = data.locations;
+//         let newArr = locations.concat(global.locations);
+//         global.locations = newArr;
+//         console.log('length');
+//         console.log(newArr.length);
+//     }
+// });
 
 class Main extends Component {
 
@@ -17,23 +34,83 @@ class Main extends Component {
         super(props);
         this.modalElement = React.createRef();
         this.state = {
+            enabled:Boolean,
+            isMoving: Boolean,
+            showsUserLocation: false,
+            location: [],
             region: {
                 latitude: 0,
                 longitude: 0,
                 latitudeDelta: 0.009,
                 longitudeDelta: 0.009
             },
-            markerPosition: {
-                latitude: -1,
-                longitude: -1
-            },
+            markerPosition: new AnimatedRegion({
+                latitude: 22,
+                longitude: 19
+            }),
             markers: [],
             coords: [],
             isTracking: false,
-            modalVisible: false
+            modalVisible: false,
+            appState: AppState.currentState
         }
         this.handlePress = this.handlePress.bind(this);
     }
+
+    componentWillMount() {
+        ////
+        // 1.  Wire up event-listeners
+        //
+    
+        // This handler fires whenever bgGeo receives a location update.
+        BackgroundGeolocation.onLocation(this.onLocation, this.onError);
+    
+        // This handler fires when movement states changes (stationary->moving; moving->stationary)
+        BackgroundGeolocation.onMotionChange(this.onMotionChange);
+    
+        // This event fires when a change in motion activity is detected
+        BackgroundGeolocation.onActivityChange(this.onActivityChange);
+    
+        // This event fires when the user toggles location-services authorization
+        BackgroundGeolocation.onProviderChange(this.onProviderChange);
+    
+        ////
+        // 2.  Execute #ready method (required)
+        //
+        BackgroundGeolocation.ready({
+          // Geolocation Config
+          desiredAccuracy: BackgroundGeolocation.DESIRED_ACCURACY_HIGH,
+          distanceFilter: 10,
+          // Activity Recognition
+          stopTimeout: 1,
+          // Application config
+          debug: true, // <-- enable this hear sounds for background-geolocation life-cycle.
+          logLevel: BackgroundGeolocation.LOG_LEVEL_VERBOSE,
+          stopOnTerminate: false,   // <-- Allow the background-service to continue tracking when user closes the app.
+          startOnBoot: true,        // <-- Auto start tracking when device is powered-up.
+          // HTTP / SQLite config
+          url: 'http://yourserver.com/locations',
+          batchSync: false,       // <-- [Default: false] Set true to sync locations to server in a single HTTP request.
+          autoSync: true,         // <-- [Default: true] Set true to sync each location to server as it arrives.
+          headers: {              // <-- Optional HTTP headers
+            "X-FOO": "bar"
+          },
+          params: {               // <-- Optional HTTP params
+            "auth_token": "maybe_your_server_authenticates_via_token_YES?"
+          }
+        }, (state) => {
+          console.log("- BackgroundGeolocation is configured and ready: ", state.enabled);
+    
+          if (!state.enabled) {
+            ////
+            // 3. Start tracking!
+            //
+            BackgroundGeolocation.start(function() {
+              console.log("- Start success");
+            });
+          }
+        });
+      }
 
     componentDidMount() {
         // this.getDirections("55.814018,-4.322100", "55.824791,-4.349150")
@@ -41,10 +118,62 @@ class Main extends Component {
             this.setState({
                 errorMessage: 'Oops, this will not work on Sketch in an Android emulator. Try it on your device!',
             });
-        } else {
-            this._getLocationAsync();
         }
+        const options = {
+            accuracy: Location.Accuracy.BestForNavigation,
+            timeInterval: 2000,
+            distanceInterval: 0
+        }
+        AppState.addEventListener('change', this._handleAppStateChange);
+
+
+    
     }
+
+    componentWillUnmount() {
+        Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
+        AppState.removeEventListener('change', this._handleAppStateChange);
+        BackgroundGeolocation.removeListeners();
+    }
+
+    onLocation(location) {
+        console.log('[location] -', location);
+      }
+      onLocation(location) {
+        console.log('[location] -', location);
+      }
+      onError(error) {
+        console.warn('[location] ERROR -', error);
+      }
+      onActivityChange(event) {
+        console.log('[activitychange] -', event);  // eg: 'on_foot', 'still', 'in_vehicle'
+      }
+      onProviderChange(provider) {
+        console.log('[providerchange] -', provider.enabled, provider.status);
+      }
+      onMotionChange(event) {
+        console.log('[motionchange] -', event.isMoving, event.location);
+      }
+
+    _handleAppStateChange = (nextAppState) => {
+        if (
+            this.state.appState.match(/inactive|background/) &&
+            nextAppState === 'active'
+        ) {
+            console.log('App has come to the foreground!');
+            if (global.length !== 0) {
+                this.updateCoords();
+            }
+        }
+        else {
+            console.log('App is in the background');
+            if (this.state.isTracking === true) {
+                global.length = global.locations.length;
+                console.log('setting length');
+            }
+        }
+        this.setState({ appState: nextAppState });
+    };
 
     async getDirections(startLoc, destinationLoc) {
         try {
@@ -73,37 +202,52 @@ class Main extends Component {
                 errorMessage: 'Permission to access location was denied',
             });
         }
-        this.showDialog
-
-        //let currentLoc = await Location.getCurrentPositionAsync({enableHighAccuracy: true});
-        const options = {
-            accuracy: Location.Accuracy.BestForNavigation,
-            timeInterval: 5000,
-            distanceInterval: 0
-        }
-        Location.watchPositionAsync(options, (currentLoc) => {
-            console.log(currentLoc.coords);
-            if (this.state.region.latitude === 0 && this.state.region.longitude === 0) {
-                this.setState({
-                    region: {
-                        latitude: currentLoc.coords.latitude,
-                        longitude: currentLoc.coords.longitude,
-                        latitudeDelta: 0.0009,
-                        longitudeDelta: 0.0001
-                    }
-                })
-            }
+        let currentLoc = global.locations[0];
+        if (this.state.region.latitude === 0 && this.state.region.longitude === 0) {
             this.setState({
-                markerPosition: {
+                region: {
                     latitude: currentLoc.coords.latitude,
                     longitude: currentLoc.coords.longitude,
+                    latitudeDelta: 0.0009,
+                    longitudeDelta: ASPECT_RATIO * 0.0009
                 }
+            }, () => {
+                this._map.animateToRegion(this.state.region, 1000);
             })
+        }
+        await this.setState({
+            markerPosition: {
+                latitude: currentLoc.coords.latitude,
+                longitude: currentLoc.coords.longitude,
+            }
         })
+
     };
 
     showModal = () => {
         this.modalElement.current.showModal();
+    }
+
+    updateCoords = async () => {
+        const arrLength = global.length;
+        const locations = global.locations;
+
+        let length = locations.length - arrLength;
+        for (i = length; i >= 0; i--) {
+            await this.setState({
+                coords: [
+                    ... this.state.coords,
+                    {
+                        latitude: locations[i].coords.latitude,
+                        longitude: locations[i].coords.longitude,
+                    }
+                ]
+            }, () => {
+                console.log('updated array value locations[%d]', i);
+            })
+        }
+        global.length = 0;
+        console.log('setting length to 0');
     }
 
 
@@ -131,8 +275,7 @@ class Main extends Component {
                                 longitude: this.state.markerPosition.longitude
                             }
                         ]
-                    }, () => {
-                        console.log('adding marker');
+
                     })
                 }, 2000);
             }
@@ -161,17 +304,23 @@ class Main extends Component {
         this.setState({ region });
     }
 
-
     render() {
         return (
             <View style={styles.container}>
                 <MapView style={styles.map}
-                    region={this.state.region}
+                    ref={(map) => this._map = map}
+                    initalRegion={this.state.region}
                     onRegionChangeComplete={this.onRegionChange.bind(this)}
                     onPress={this.handlePress}
+                    showsMyLocationButton={true}
+                    showsIndoorLevelPicker={false}
+                    showsIndoors={false}
+
                 >
-                    <Marker
+                    <Marker.Animated
+                        ref={(marker) => this._marker = marker}
                         coordinate={this.state.markerPosition}
+
                     >
                         <View style={styles.radius}>
                             <Image
@@ -179,7 +328,7 @@ class Main extends Component {
                                 style={{ width: 50, height: 50, borderRadius: 50 / 2 }}
                             />
                         </View>
-                    </Marker>
+                    </Marker.Animated>
                     {/* {this.state.markers.map(marker => (
                         <Marker
                             coordinate={marker.coordinate}
@@ -224,6 +373,8 @@ class Main extends Component {
         )
     }
 }
+
+
 
 const styles = StyleSheet.create({
     container: {
