@@ -65,7 +65,7 @@ class Main extends Component {
         const options = {
             accuracy: Location.Accuracy.BestForNavigation,
             timeInterval: 2000,
-            distanceInterval: 0
+            distanceInterval: 10
         }
         AppState.addEventListener('change', this._handleAppStateChange);
         Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, options);
