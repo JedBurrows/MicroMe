@@ -9,24 +9,23 @@ import Polyline from '@mapbox/polyline';
 import BackgroundGeolocation from 'react-native-background-geolocation';
 
 const screen = Dimensions.get('window');
-//const TRACKER_HOST = 'http://tracker.transistorsoft.com/locations/';
 const ASPECT_RATIO = screen.width / screen.height;
 const API_KEY = 'AIzaSyAmrK1oa7p6dAZwcqRZJ1Ut4eBI3uw67oU';
 const LOCATION_TASK_NAME = 'background-location-task';
 
-// TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }) => {
-//     if (error) {
-//         // Error occurred - check `error.message` for more details.
-//         return;
-//     }
-//     if (data) {
-//         const locations = data.locations;
-//         let newArr = locations.concat(global.locations);
-//         global.locations = newArr;
-//         console.log('length');
-//         console.log(newArr.length);
-//     }
-// });
+TaskManager.defineTask(LOCATION_TASK_NAME, ({ data, error }) => {
+    if (error) {
+        // Error occurred - check `error.message` for more details.
+        return;
+    }
+    if (data) {
+        const locations = data.locations;
+        let newArr = locations.concat(global.locations);
+        global.locations = newArr;
+        console.log('length');
+        console.log(newArr.length);
+    }
+});
 
 class Main extends Component {
 
@@ -57,61 +56,6 @@ class Main extends Component {
         this.handlePress = this.handlePress.bind(this);
     }
 
-    componentWillMount() {
-        ////
-        // 1.  Wire up event-listeners
-        //
-    
-        // This handler fires whenever bgGeo receives a location update.
-        BackgroundGeolocation.onLocation(this.onLocation, this.onError);
-    
-        // This handler fires when movement states changes (stationary->moving; moving->stationary)
-        BackgroundGeolocation.onMotionChange(this.onMotionChange);
-    
-        // This event fires when a change in motion activity is detected
-        BackgroundGeolocation.onActivityChange(this.onActivityChange);
-    
-        // This event fires when the user toggles location-services authorization
-        BackgroundGeolocation.onProviderChange(this.onProviderChange);
-    
-        ////
-        // 2.  Execute #ready method (required)
-        //
-        BackgroundGeolocation.ready({
-          // Geolocation Config
-          desiredAccuracy: BackgroundGeolocation.DESIRED_ACCURACY_HIGH,
-          distanceFilter: 10,
-          // Activity Recognition
-          stopTimeout: 1,
-          // Application config
-          debug: true, // <-- enable this hear sounds for background-geolocation life-cycle.
-          logLevel: BackgroundGeolocation.LOG_LEVEL_VERBOSE,
-          stopOnTerminate: false,   // <-- Allow the background-service to continue tracking when user closes the app.
-          startOnBoot: true,        // <-- Auto start tracking when device is powered-up.
-          // HTTP / SQLite config
-          url: 'http://yourserver.com/locations',
-          batchSync: false,       // <-- [Default: false] Set true to sync locations to server in a single HTTP request.
-          autoSync: true,         // <-- [Default: true] Set true to sync each location to server as it arrives.
-          headers: {              // <-- Optional HTTP headers
-            "X-FOO": "bar"
-          },
-          params: {               // <-- Optional HTTP params
-            "auth_token": "maybe_your_server_authenticates_via_token_YES?"
-          }
-        }, (state) => {
-          console.log("- BackgroundGeolocation is configured and ready: ", state.enabled);
-    
-          if (!state.enabled) {
-            ////
-            // 3. Start tracking!
-            //
-            BackgroundGeolocation.start(function() {
-              console.log("- Start success");
-            });
-          }
-        });
-      }
-
     componentDidMount() {
         // this.getDirections("55.814018,-4.322100", "55.824791,-4.349150")
         if (Platform.OS === 'android' && !Constants.isDevice) {
@@ -136,24 +80,6 @@ class Main extends Component {
         BackgroundGeolocation.removeListeners();
     }
 
-    onLocation(location) {
-        console.log('[location] -', location);
-      }
-      onLocation(location) {
-        console.log('[location] -', location);
-      }
-      onError(error) {
-        console.warn('[location] ERROR -', error);
-      }
-      onActivityChange(event) {
-        console.log('[activitychange] -', event);  // eg: 'on_foot', 'still', 'in_vehicle'
-      }
-      onProviderChange(provider) {
-        console.log('[providerchange] -', provider.enabled, provider.status);
-      }
-      onMotionChange(event) {
-        console.log('[motionchange] -', event.isMoving, event.location);
-      }
 
     _handleAppStateChange = (nextAppState) => {
         if (
