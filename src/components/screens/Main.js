@@ -5,6 +5,7 @@ import Icon from 'react-native-vector-icons/Entypo';
 import MapView, { Marker, Polyline as MapPolyline, AnimatedRegion } from "react-native-maps";
 import { MapButton, PostRunModal } from "../containers/";
 import Polyline from '@mapbox/polyline';
+import BackgroundGeolocation from 'react-native-mauron85-background-geolocation';
 
 const screen = Dimensions.get('window');
 const ASPECT_RATIO = screen.width / screen.height;
@@ -48,9 +49,9 @@ class Main extends Component {
             markers: [],
             coords: [],
             isTracking: false,
-            modalVisible: false,
             appState: AppState.currentState,
-            interval: null
+            interval: null,
+            hasAnimated: false
         }
         this.handlePress = this.handlePress.bind(this);
     }
@@ -65,18 +66,24 @@ class Main extends Component {
         const options = {
             accuracy: Location.Accuracy.BestForNavigation,
             timeInterval: 2000,
-            distanceInterval: 10
+            distanceInterval: 0
         }
         AppState.addEventListener('change', this._handleAppStateChange);
         Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, options);
         const interval = setInterval(this._getLocationAsync, 1000);
         this.setState({ interval })
+        alert('newVersion 5');
+        global.locationOnStateChange = {
+            coords: {
+                latitude: 0,
+                longitude: 0
+            }
+        }
     }
 
     componentWillUnmount() {
         Location.stopLocationUpdatesAsync(LOCATION_TASK_NAME);
         AppState.removeEventListener('change', this._handleAppStateChange);
-        BackgroundGeolocation.removeListeners();
         clearInterval(this.state.interval);
     }
 
@@ -87,6 +94,7 @@ class Main extends Component {
             nextAppState === 'active'
         ) {
             console.log('App has come to the foreground!');
+            this._map.forceUpdate();
             if (global.length > 0) {
                 this.updateCoords();
             }
@@ -130,14 +138,15 @@ class Main extends Component {
             });
         }
         let currentLoc = await global.locations[0];
-        if (this.state.region.latitude === 0 && this.state.region.longitude === 0) {
+        if (this.state.hasAnimated === false) {
             await this.setState({
                 region: {
                     latitude: currentLoc.coords.latitude,
                     longitude: currentLoc.coords.longitude,
                     latitudeDelta: 0.0009,
-                    longitudeDelta: ASPECT_RATIO * 0.0009
-                }
+                    longitudeDelta: ASPECT_RATIO * 0.009
+                },
+                hasAnimated: true
             }, () => {
                 this._map.animateToRegion(this.state.region, 1000);
                 console.log('animating to region');
@@ -162,17 +171,19 @@ class Main extends Component {
 
         let length = locations.length - arrLength;
         for (i = length; i >= 0; i--) {
-            await this.setState({
-                coords: [
-                    ... this.state.coords,
-                    {
-                        latitude: global.locations[i].coords.latitude,
-                        longitude: global.locations[i].coords.longitude,
-                    }
-                ]
-            }, () => {
-                console.log('updated array value locations[%d]', i);
-            })
+            if (global.locations[i].coords.latitude !== global.locationOnStateChange.coords.latitude && global.locations[i].coords.longitude !== global.locationOnStateChange.coords.longitude) {
+                await this.setState({
+                    coords: [
+                        ... this.state.coords,
+                        {
+                            latitude: global.locations[i].coords.latitude,
+                            longitude: global.locations[i].coords.longitude,
+                        }
+                    ]
+                }, () => {
+                    console.log('updated array value locations[%d]', i);
+                })
+            }
         }
         global.length = 0;
         console.log('setting length to 0');
@@ -189,24 +200,26 @@ class Main extends Component {
                         clearInterval(interval);
                         this.showModal();
                     }
-                    this.setState({
-                        markers: [
-                            ... this.state.markers,
-                            {
-                                coordinate: this.state.markerPosition
-                            }
-                        ],
-                        coords: [
-                            ... this.state.coords,
-                            {
-                                latitude: this.state.markerPosition.latitude,
-                                longitude: this.state.markerPosition.longitude
-                            }
-                        ]
+                    if (this.state.markerPosition.latitude !== global.locationOnStateChange.coords.latitude && this.state.markerPosition.longitude !== global.locationOnStateChange.coords.longitude) {
+                        this.setState({
+                            markers: [
+                                ... this.state.markers,
+                                {
+                                    coordinate: this.state.markerPosition
+                                }
+                            ],
+                            coords: [
+                                ... this.state.coords,
+                                {
+                                    latitude: this.state.markerPosition.latitude,
+                                    longitude: this.state.markerPosition.longitude
+                                }
+                            ]
 
-                    }, () => {
-                        console.log('tracking updated');
-                    })
+                        }, () => {
+                            console.log('tracking updated');
+                        })
+                    }
 
 
                 }, 2000);
@@ -271,14 +284,6 @@ class Main extends Component {
                     <MapPolyline
                         coordinates={this.state.coords}
                         strokeColor="#000" // fallback for when `strokeColors` is not supported by the map-provider
-                        strokeColors={[
-                            '#7F0000',
-                            '#00000000', // no color, creates a "long" gradient between the previous and next coordinate
-                            '#B24112',
-                            '#E5845C',
-                            '#238C23',
-                            '#7F0000'
-                        ]}
                         strokeWidth={6}
                     />
 
@@ -299,7 +304,7 @@ class Main extends Component {
                     }} handlePress={this.handleMapButtonPress.bind(this)} />
                 </View>
                 <View style={styles.modal}>
-                    <PostRunModal modalVisible={this.state.modalVisible} coords={this.state.coords} ref={this.modalElement} />
+                    <PostRunModal modalVisible={false} coords={this.state.coords} ref={this.modalElement} />
                 </View>
             </View>
         )

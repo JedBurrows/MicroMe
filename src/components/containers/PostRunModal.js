@@ -27,14 +27,6 @@ export default class PostRunModal extends React.Component {
         })
     }
 
-    cleanUpArray = () => {
-        this.props.coords.array.forEach(element => {
-            if (element.latitude == 0 && element.longitude == 0) {
-
-            }
-        });
-    }
-
     postRoute = () => {
         if (this.state.RouteName === '' || this.state.RouteName === null) {
             alert('Please enter a valid route name');
