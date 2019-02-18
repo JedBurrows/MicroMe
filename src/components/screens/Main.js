@@ -105,7 +105,7 @@ class Main extends Component {
             if (this.state.isTracking === true) {
                 global.length = global.locations.length;
                 global.locationOnStateChange = global.locations[0];
-                console.log('setting length');
+                //console.log('setting length');
             }
         }
         this.setState({ appState: nextAppState });
@@ -153,40 +153,15 @@ class Main extends Component {
                 console.log('animating to region');
             })
         }
-        if (this.state.coords.accuracy < 10) {
+        if (currentLoc.coords.accuracy < 10) {
             await this.setState({
                 markerPosition: {
                     latitude: currentLoc.coords.latitude,
                     longitude: currentLoc.coords.longitude,
                 }
             })
-            if (this.state.isTracking === true) {
-                this.setState({
-                    markers: [
-                        ... this.state.locations,
-                        {
-                            coords: currentLoc.coords
-                        }
-                    ],
-                }, () => {
-                    console.log('updating locations');
-                })
-            }
         }
-
     };
-
-    cleanCoords = () => {
-        let rawDataCopy = this.state.locations.slice();
-        const cleanedUpArr = _runKalmanOnLocations(rawDataCopy, this.state.kalmanConstant);
-        console.log('CLEANED UP ARRAY');
-        console.log(this.cleanedUpArr);
-        // this.setState({
-        //     coords: cleanedUpArr
-        // }, () => {
-        //     console.log(this.state.coords);
-        // })
-    }
 
     showModal = () => {
         this.modalElement.current.showModal();
@@ -210,6 +185,7 @@ class Main extends Component {
                 }, () => {
                     console.log('updated array value locations[%d]', i);
                 })
+                Ï
             }
         }
         global.length = 0;
@@ -225,28 +201,29 @@ class Main extends Component {
                     if (this.state.isTracking === false) {
                         alert("stopping tracking");
                         clearInterval(interval);
-                        this.cleanCoords();
                         this.showModal();
                     }
                     if (this.state.markerPosition.latitude !== global.locationOnStateChange.coords.latitude && this.state.markerPosition.longitude !== global.locationOnStateChange.coords.longitude) {
-                        this.setState({
-                            markers: [
-                                ... this.state.markers,
-                                {
-                                    coordinate: this.state.markerPosition
-                                }
-                            ],
-                            coords: [
-                                ... this.state.coords,
-                                {
-                                    latitude: this.state.markerPosition.latitude,
-                                    longitude: this.state.markerPosition.longitude
-                                }
-                            ]
+                        if (this.state.markerPosition.valid === true) {
+                            this.setState({
+                                markers: [
+                                    ... this.state.markers,
+                                    {
+                                        coordinate: this.state.markerPosition
+                                    }
+                                ],
+                                coords: [
+                                    ... this.state.coords,
+                                    {
+                                        latitude: this.state.markerPosition.latitude,
+                                        longitude: this.state.markerPosition.longitude
+                                    }
+                                ]
 
-                        }, () => {
-                            console.log('tracking updated');
-                        })
+                            }, () => {
+                                console.log('tracking updated');
+                            })
+                        }
                     }
 
 
@@ -314,7 +291,7 @@ class Main extends Component {
                         strokeColor="#000" // fallback for when `strokeColors` is not supported by the map-provider
                         strokeWidth={6}
                     />
-                    
+
 
                 </MapView>
                 <View>
@@ -333,7 +310,7 @@ class Main extends Component {
                     }} handlePress={this.handleMapButtonPress.bind(this)} />
                 </View>
                 <View style={styles.modal}>
-                    <PostRunModal modalVisible={false} coords={this.state.coords} ref={this.modalElement} username={this.props.navigation.getParam('username','')} />
+                    <PostRunModal modalVisible={false} coords={this.state.coords} ref={this.modalElement} username={this.props.navigation.getParam('username', '')} />
                 </View>
             </View>
         )
