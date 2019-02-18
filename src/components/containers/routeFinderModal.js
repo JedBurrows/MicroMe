@@ -36,6 +36,7 @@ export default class RouteFinderModal extends React.Component {
         fetch('http://151.231.2.64:3000/users/getRoutes')
             .then(res => res.json())
             .then(res => {
+                console.log(res);
                 this.setState({
                     data: res.data,
                     error: res.error || null,

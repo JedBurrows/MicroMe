@@ -125,15 +125,16 @@ router.post('/PostRoute', function (req, res, next) {
     })
 })
 
-router.post('/getRoutes', function (req, res, next) {
+router.get('/getRoutes', function (req, res, next) {
 
   connection.query(
-    "SELECT * FROM Microme.routes", function(err, row, field){
+    "SELECT * FROM microme.routes", function(err, row, field){
       if(err){
         console.log(err);
         res.send({'success': false, 'message': 'could not connect to database'})
       }
       else{
+        console.log(row);
         res.send({'success': true, data: row })
       }
     }
