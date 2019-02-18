@@ -153,34 +153,39 @@ class Main extends Component {
                 console.log('animating to region');
             })
         }
-        await this.setState({
-            markerPosition: {
-                latitude: currentLoc.coords.latitude,
-                longitude: currentLoc.coords.longitude,
-            }
-        })
-        if (this.state.isTracking === true) {
-            this.setState({
-                markers: [
-                    ... this.state.locations,
-                    {
-                        coords: currentLoc.coords
-                    }
-                ],
-            },() => {
-                console.log('updating locations');
+        if (this.state.coords.accuracy < 10) {
+            await this.setState({
+                markerPosition: {
+                    latitude: currentLoc.coords.latitude,
+                    longitude: currentLoc.coords.longitude,
+                }
             })
+            if (this.state.isTracking === true) {
+                this.setState({
+                    markers: [
+                        ... this.state.locations,
+                        {
+                            coords: currentLoc.coords
+                        }
+                    ],
+                }, () => {
+                    console.log('updating locations');
+                })
+            }
         }
 
     };
 
     cleanCoords = () => {
-        const cleanedUpArr = _runKalmanOnLocations(this.state.locations,this.state.kalmanConstant);
-        this.setState({
-            coords: cleanedUpArr
-        }, () => {
-            console.log(this.state.coords);
-        })
+        let rawDataCopy = this.state.locations.slice();
+        const cleanedUpArr = _runKalmanOnLocations(rawDataCopy, this.state.kalmanConstant);
+        console.log('CLEANED UP ARRAY');
+        console.log(this.cleanedUpArr);
+        // this.setState({
+        //     coords: cleanedUpArr
+        // }, () => {
+        //     console.log(this.state.coords);
+        // })
     }
 
     showModal = () => {
@@ -309,6 +314,7 @@ class Main extends Component {
                         strokeColor="#000" // fallback for when `strokeColors` is not supported by the map-provider
                         strokeWidth={6}
                     />
+                    
 
                 </MapView>
                 <View>
@@ -327,7 +333,7 @@ class Main extends Component {
                     }} handlePress={this.handleMapButtonPress.bind(this)} />
                 </View>
                 <View style={styles.modal}>
-                    <PostRunModal modalVisible={false} coords={this.state.coords} ref={this.modalElement} />
+                    <PostRunModal modalVisible={false} coords={this.state.coords} ref={this.modalElement} username={this.props.navigation.getParam('username','')} />
                 </View>
             </View>
         )

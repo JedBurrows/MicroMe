@@ -40,7 +40,8 @@ export default class PostRunModal extends React.Component {
                 },
                 body: JSON.stringify({
                     RouteName: this.state.RouteName,
-                    coords: JSON.stringify(this.props.coords)
+                    coords: JSON.stringify(this.props.coords),
+                    creator: this.props.username
                 })
             })
 

@@ -37,7 +37,9 @@ class Login extends React.Component {
                     catch (err) {
                         console.log(err);
                     }
-                    this.props.navigation.navigate('Main');
+                    this.props.navigation.navigate('Main', {
+                        username: this.state.username
+                    });
                 }
                 else {
                     alert(res.message);

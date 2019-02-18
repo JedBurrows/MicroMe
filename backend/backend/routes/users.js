@@ -94,6 +94,7 @@ router.post('/signup', function (req, res, next) {
 router.post('/PostRoute', function (req, res, next) {
   const RouteName = req.body.RouteName;
   const coords = req.body.coords;
+  const creator = req.body.creator
 
   connection.query(
     "SELECT * FROM microme.routes WHERE Name = ?",
@@ -108,8 +109,8 @@ router.post('/PostRoute', function (req, res, next) {
       }
       else {
         connection.query(
-          "INSERT into microme.routes (name, RouteJSON) VALUES (?, ?)",
-          [RouteName, coords], function (err, row, field) {
+          "INSERT into microme.routes (name, RouteJSON, routeCreator) VALUES (?, ?, ?)",
+          [RouteName, coords, creator], function (err, row, field) {
 
             if (err) {
               console.log(err);
