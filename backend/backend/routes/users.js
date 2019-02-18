@@ -117,12 +117,27 @@ router.post('/PostRoute', function (req, res, next) {
               res.send({ 'success': false, 'message': 'could not connect to database' })
             }
             else {
-              res.send({ 'success': true, 'message': 'Route has been saved' })
+              res.send({ 'success': true, 'message': 'got routes', 'data': row })
             }
 
           });
       }
     })
+})
+
+router.post('/getRoutes', function (req, res, next) {
+
+  connection.query(
+    "SELECT * FROM Microme.routes", function(err, row, field){
+      if(err){
+        console.log(err);
+        res.send({'success': false, 'message': 'could not connect to database'})
+      }
+      else{
+        res.send({'success': true, })
+      }
+    }
+  )
 })
 
 module.exports = router;

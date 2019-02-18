@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Image, Platform, AppState, Dimensions } from "r
 import { Constants, Location, Permissions, TaskManager } from 'expo';
 import Icon from 'react-native-vector-icons/Entypo';
 import MapView, { Marker, Polyline as MapPolyline, AnimatedRegion } from "react-native-maps";
-import { MapButton, PostRunModal } from "../containers/";
+import { MapButton, PostRunModal, routeFinderButton, routeFinderModal } from "../containers/";
 import Polyline from '@mapbox/polyline';
 import { _runKalmanOnLocations } from '../../helperFunctions';
 
@@ -52,7 +52,7 @@ class Main extends Component {
             appState: AppState.currentState,
             interval: null,
             hasAnimated: false,
-            kalmanConstant: 500
+            loadedRoute:[]
         }
         this.handlePress = this.handlePress.bind(this);
     }
