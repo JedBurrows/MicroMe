@@ -104,7 +104,7 @@ router.post('/PostRoute', function (req, res, next) {
         res.send({ 'success': false, 'message': 'could not connect to database' })
       }
       if (row.length > 0) {
-        res.send({ 'success': false, 'message': 'A Route with that name alreadt exists!' })
+        res.send({ 'success': false, 'message': 'A Route with that name already exists!' })
 
       }
       else {
@@ -117,7 +117,7 @@ router.post('/PostRoute', function (req, res, next) {
               res.send({ 'success': false, 'message': 'could not connect to database' })
             }
             else {
-              res.send({ 'success': true, 'message': 'got routes', 'data': row })
+              res.send({ 'success': true, 'message': 'succesfully added route!'})
             }
 
           });
@@ -134,7 +134,7 @@ router.post('/getRoutes', function (req, res, next) {
         res.send({'success': false, 'message': 'could not connect to database'})
       }
       else{
-        res.send({'success': true, })
+        res.send({'success': true, data: row })
       }
     }
   )

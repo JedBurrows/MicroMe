@@ -1,13 +1,14 @@
 import React from "react";
-import { View, Text, TouchableHighlight, StyleSheet, Modal, Alert, TextInput, TouchableOpacity } from "react-native";
+import { View, Text, TouchableHighlight, StyleSheet, Modal, Alert, TextInput, TouchableOpacity, FlatList } from "react-native";
+import { List, ListItem } from 'react-native-elements';
 
-export default class routeFinderModal extends React.Component {
+export default class RouteFinderModal extends React.Component {
 
     constructor(props) {
         super(props);
 
         this.state = {
-            modalVisible: this.props.modalVisible,
+            modalVisible: true,
             data: [],
             error: null,
 
@@ -50,7 +51,7 @@ export default class routeFinderModal extends React.Component {
         return (
             <Modal
                 animationType="slide"
-                transparent={true}
+                transparent={false}
                 visible={this.state.modalVisible}
                 onRequestClose={() => {
                     this.hideModal();

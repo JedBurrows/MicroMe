@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, Button, TouchableOpacity, StyleSheet, Modal } from "react-native";
 
-export default class routeFinderButton extends React.Component {
+export default class RouteFinderButton extends React.Component {
 
     constructor(props){
         super(props);

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Image, Platform, AppState, Dimensions } from "r
 import { Constants, Location, Permissions, TaskManager } from 'expo';
 import Icon from 'react-native-vector-icons/Entypo';
 import MapView, { Marker, Polyline as MapPolyline, AnimatedRegion } from "react-native-maps";
-import { MapButton, PostRunModal, routeFinderButton, routeFinderModal } from "../containers/";
+import { MapButton, PostRunModal, RouteFinderButton, RouteFinderModal } from "../containers/";
 import Polyline from '@mapbox/polyline';
 import { _runKalmanOnLocations } from '../../helperFunctions';
 
@@ -311,6 +311,9 @@ class Main extends Component {
                 </View>
                 <View style={styles.modal}>
                     <PostRunModal modalVisible={false} coords={this.state.coords} ref={this.modalElement} username={this.props.navigation.getParam('username', '')} />
+                </View>
+                <View>
+                    <RouteFinderModal/>
                 </View>
             </View>
         )
