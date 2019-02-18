@@ -134,7 +134,6 @@ router.get('/getRoutes', function (req, res, next) {
         res.send({'success': false, 'message': 'could not connect to database'})
       }
       else{
-        console.log(row);
         res.send({'success': true, data: row })
       }
     }

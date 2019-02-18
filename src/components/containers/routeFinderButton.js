@@ -3,7 +3,7 @@ import { View, Text, Button, TouchableOpacity, StyleSheet, Modal } from "react-n
 
 export default class RouteFinderButton extends React.Component {
 
-    constructor(props){
+    constructor(props) {
         super(props);
 
         this.state = {
@@ -11,16 +11,15 @@ export default class RouteFinderButton extends React.Component {
         }
     }
 
-
-    buttonPress(){
-        this.props.handlePress();
+    handlePress = () => {
+        this.props.onPress();
     }
 
     render() {
         return (
             <View>
-                <TouchableOpacity style={this.props.style} onPress={this.buttonPress.bind(this)}>
-                <Text style={styles.text} >{this.state.text}</Text>
+                <TouchableOpacity style={this.props.style} onPress={this.handlePress.bind(this)}>
+                    <Text style={styles.text} >{this.state.text}</Text>
                 </TouchableOpacity>
             </View>
         );
@@ -28,7 +27,7 @@ export default class RouteFinderButton extends React.Component {
 }
 
 const styles = StyleSheet.create({
-    text:{
+    text: {
         fontSize: 20
     }
 })

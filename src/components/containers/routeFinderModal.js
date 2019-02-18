@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, TouchableHighlight, StyleSheet, Modal, Alert, TextInput, TouchableOpacity, FlatList } from "react-native";
-import { List, ListItem } from 'react-native-elements';
+import { List, ListItem, Button } from 'react-native-elements';
 
 export default class RouteFinderModal extends React.Component {
 
@@ -8,7 +8,7 @@ export default class RouteFinderModal extends React.Component {
         super(props);
 
         this.state = {
-            modalVisible: true,
+            modalVisible: this.props.modalVisible,
             data: [],
             error: null,
 
@@ -18,6 +18,14 @@ export default class RouteFinderModal extends React.Component {
 
     componentDidMount() {
         this.makeRequest();
+    }
+
+    componentDidUpdate(prevProps) {
+        if(this.props.modalVisible !== prevProps.modalVisible){
+            this.setState({
+                modalVisible: !this.state.modalVisible
+            })
+        }
     }
 
     hideModal = () => {
@@ -36,7 +44,6 @@ export default class RouteFinderModal extends React.Component {
         fetch('http://151.231.2.64:3000/users/getRoutes')
             .then(res => res.json())
             .then(res => {
-                console.log(res);
                 this.setState({
                     data: res.data,
                     error: res.error || null,
@@ -52,38 +59,38 @@ export default class RouteFinderModal extends React.Component {
         return (
             <Modal
                 animationType="slide"
-                transparent={false}
+                transparent={true}
                 visible={this.state.modalVisible}
                 onRequestClose={() => {
                     this.hideModal();
                 }}>
-                <View style={styles.container}>
-                    <View style={styles.inner}>
-                        <View style={styles.title}>
-                            <Text style={styles.text}>Routes</Text>
-                            <View style={styles.listContainer}>
-                                <List containerStyle={{ borderTopWidth: 0, borderBottomWidth: 0 }}>
-                                    <FlatList
-                                        data={this.state.data}
-                                        renderItem={({ item }) => (
-                                            <ListItem
-                                                name={`${item.name}`}
-
-                                            />
-                                        )}
-                                        ItemSeparatorComponent={this.renderSeparator}
-                                        ListHeaderComponent={this.renderHeader}
-                                        ListFooterComponent={this.renderFooter}
-                                        onRefresh={this.handleRefresh}
-                                        refreshing={this.state.refreshing}
-                                        onEndReached={this.handleLoadMore}
-                                        onEndReachedThreshold={50}
-                                    />
-                                </List>
-                            </View>
-                        </View>
-                    </View>
+                <View style={styles.headingContainer}>
+                    <Text style={styles.heading}>Routes</Text>
                 </View>
+                <View style={styles.listContainer}>
+                    <List containerStyle={{ borderTopWidth: 0, borderBottomWidth: 0 }}>
+                        <FlatList
+                            data={this.state.data}
+                            renderItem={({ item }) => (
+                                <ListItem
+                                    button onPress={() => this.props.handlePress(item)} 
+                                    roundAvatar
+                                    title={`${item.Name}`}
+                                    subtitle={item.routeCreator}
+                                />
+                            )}
+                            keyExtractor={item => item.Name}
+                            ItemSeparatorComponent={this.renderSeparator}
+                            ListHeaderComponent={this.renderHeader}
+                            ListFooterComponent={this.renderFooter}
+                            onRefresh={this.handleRefresh}
+                            refreshing={this.state.refreshing}
+                            onEndReached={this.handleLoadMore}
+                            onEndReachedThreshold={50}
+                        />
+                    </List>
+                </View>
+
             </Modal>
         );
     }
@@ -103,24 +110,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         backgroundColor: 'white'
     },
-    textInputContainer: {
+    headingContainer: {
         flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#fff',
-        borderWidth: .5,
-        borderColor: '#000',
-        height: 40,
-        borderRadius: 5,
-        margin: 10
+        justifyContent: 'space-evenly',
+        alignItems: 'center'
     },
-    textInput: {
-        flex: 1,
-    },
-    btnText: {
-        color: '#fff',
-        fontSize: 20
-    }, button: {
+    button: {
         flexDirection: 'row',
         justifyContent: 'center',
         alignItems: 'center',
@@ -165,5 +160,8 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         margin: 10,
         alignSelf: 'stretch'
+    },
+    listContainer: {
+        flex: 1,
     }
 })

@@ -31,6 +31,8 @@ class Main extends Component {
     constructor(props) {
         super(props);
         this.modalElement = React.createRef();
+        this.routeModalElement = React.createRef();
+        this.routeFinderButton = React.createRef();
         this.state = {
             enabled: Boolean,
             isMoving: Boolean,
@@ -52,7 +54,8 @@ class Main extends Component {
             appState: AppState.currentState,
             interval: null,
             hasAnimated: false,
-            loadedRoute:[]
+            loadedRoute:[],
+            showRouteModal: false
         }
         this.handlePress = this.handlePress.bind(this);
     }
@@ -163,8 +166,14 @@ class Main extends Component {
         }
     };
 
-    showModal = () => {
+    showRouteDebreifModal = () => {
         this.modalElement.current.showModal();
+    }
+
+    showRouteFinderModal = () => {
+        this.setState({
+            showRouteModal: true
+        })
     }
 
     updateCoords = async () => {
@@ -201,7 +210,7 @@ class Main extends Component {
                     if (this.state.isTracking === false) {
                         alert("stopping tracking");
                         clearInterval(interval);
-                        this.showModal();
+                        this.showRouteDebreifModal();
                     }
                     if (this.state.markerPosition.latitude !== global.locationOnStateChange.coords.latitude && this.state.markerPosition.longitude !== global.locationOnStateChange.coords.longitude) {
                         if (this.state.markerPosition.valid === true) {
@@ -232,6 +241,12 @@ class Main extends Component {
         })
     }
 
+    handleRouteButtonPress = () => {
+        this.setState({
+            showRouteModal: !this.state.showRouteModal
+        })
+    }
+
     static navigationOptions = {
         tabBarIcon: ({ tintColor }) => (
             <Icon
@@ -250,6 +265,12 @@ class Main extends Component {
         console.log(e.nativeEvent.coordinate);
     }
 
+    getRoutePress = (item) => {
+        this.setState({
+            loadedRoute: JSON.parse(item.RouteJSON)
+        })
+    }
+
     onRegionChange(region) {
         this.setState({ region });
     }
@@ -265,7 +286,6 @@ class Main extends Component {
                     showsMyLocationButton={true}
                     showsIndoorLevelPicker={false}
                     showsIndoors={false}
-
                 >
                     <Marker.Animated
                         ref={(marker) => this._marker = marker}
@@ -291,11 +311,16 @@ class Main extends Component {
                         strokeColor="#000" // fallback for when `strokeColors` is not supported by the map-provider
                         strokeWidth={6}
                     />
+                    <MapPolyline
+                        coordinates={this.state.loadedRoute}
+                        strokeColor="#84D2F6" // fallback for when `strokeColors` is not supported by the map-provider
+                        strokeWidth={6}
+                    />
 
 
                 </MapView>
                 <View>
-                    <MapButton style={{
+                    {/* <MapButton style={{
                         position: "absolute",
                         borderWidth: 1,
                         borderColor: 'rgba(0,0,0,0.2)',
@@ -307,13 +332,27 @@ class Main extends Component {
                         borderRadius: 40,
                         top: 200,
                         left: 100
-                    }} handlePress={this.handleMapButtonPress.bind(this)} />
-                </View>
-                <View style={styles.modal}>
-                    <PostRunModal modalVisible={false} coords={this.state.coords} ref={this.modalElement} username={this.props.navigation.getParam('username', '')} />
+                    }} handlePress={this.handleMapButtonPress.bind(this)} /> */}
                 </View>
                 <View>
-                    <RouteFinderModal/>
+                    <RouteFinderButton style={{position: "absolute",
+                        borderWidth: 1,
+                        borderColor: 'rgba(0,0,0,0.2)',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: 80,
+                        height: 80,
+                        backgroundColor: '#fff',
+                        borderRadius: 40,
+                        top: 200,
+                        left: 100}}
+                        onPress={this.handleRouteButtonPress.bind(this)}/>
+                </View>
+                {/* <View style={styles.modal}>
+                    <PostRunModal modalVisible={false} coords={this.state.coords} ref={this.modalElement} username={this.props.navigation.getParam('username', '')} />
+                </View> */}
+                <View style={styles.modal}>
+                    <RouteFinderModal modalVisible={this.state.showRouteModal} handlePress={this.getRoutePress.bind(this)} ref={this.routeFinderButton}/>
                 </View>
             </View>
         )

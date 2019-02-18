@@ -6,7 +6,7 @@ const icon = <Icon name={"plus"} size={30} color="#01a699" />
 
 export default class MapButton extends React.Component {
 
-    constructor(props){
+    constructor(props) {
         super(props);
 
         this.state = {
@@ -14,18 +14,18 @@ export default class MapButton extends React.Component {
         }
     }
 
-    buttonPress(){
+    buttonPress() {
         this.props.handlePress();
         this.changeText();
     }
 
-    changeText(){
-        if(this.state.text === 'Go'){
+    changeText() {
+        if (this.state.text === 'Go') {
             this.setState({
                 text: 'Stop'
             })
         }
-        else{
+        else {
             this.setState({
                 text: 'Go'
             })
@@ -36,7 +36,7 @@ export default class MapButton extends React.Component {
         return (
             <View>
                 <TouchableOpacity style={this.props.style} onPress={this.buttonPress.bind(this)}>
-                <Text style={styles.text} >{this.state.text}</Text>
+                    <Text style={styles.text} >{this.state.text}</Text>
                 </TouchableOpacity>
             </View>
         );
@@ -44,7 +44,7 @@ export default class MapButton extends React.Component {
 }
 
 const styles = StyleSheet.create({
-    text:{
+    text: {
         fontSize: 20
     }
 })
