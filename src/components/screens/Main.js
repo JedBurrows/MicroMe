@@ -5,7 +5,7 @@ import Icon from 'react-native-vector-icons/Entypo';
 import MapView, { Marker, Polyline as MapPolyline, AnimatedRegion } from "react-native-maps";
 import { MapButton, PostRunModal } from "../containers/";
 import Polyline from '@mapbox/polyline';
-import BackgroundGeolocation from 'react-native-mauron85-background-geolocation';
+import { _runKalmanOnLocations } from '../../helperFunctions';
 
 const screen = Dimensions.get('window');
 const ASPECT_RATIO = screen.width / screen.height;
@@ -35,7 +35,7 @@ class Main extends Component {
             enabled: Boolean,
             isMoving: Boolean,
             showsUserLocation: false,
-            location: [],
+            locations: [],
             region: {
                 latitude: 0,
                 longitude: 0,
@@ -51,7 +51,8 @@ class Main extends Component {
             isTracking: false,
             appState: AppState.currentState,
             interval: null,
-            hasAnimated: false
+            hasAnimated: false,
+            kalmanConstant: 500
         }
         this.handlePress = this.handlePress.bind(this);
     }
@@ -72,7 +73,7 @@ class Main extends Component {
         Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, options);
         const interval = setInterval(this._getLocationAsync, 1000);
         this.setState({ interval })
-        alert('newVersion 5');
+        alert('newVersion 6');
         global.locationOnStateChange = {
             coords: {
                 latitude: 0,
@@ -158,8 +159,29 @@ class Main extends Component {
                 longitude: currentLoc.coords.longitude,
             }
         })
+        if (this.state.isTracking === true) {
+            this.setState({
+                markers: [
+                    ... this.state.locations,
+                    {
+                        coords: currentLoc.coords
+                    }
+                ],
+            },() => {
+                console.log('updating locations');
+            })
+        }
 
     };
+
+    cleanCoords = () => {
+        const cleanedUpArr = _runKalmanOnLocations(this.state.locations,this.state.kalmanConstant);
+        this.setState({
+            coords: cleanedUpArr
+        }, () => {
+            console.log(this.state.coords);
+        })
+    }
 
     showModal = () => {
         this.modalElement.current.showModal();
@@ -198,6 +220,7 @@ class Main extends Component {
                     if (this.state.isTracking === false) {
                         alert("stopping tracking");
                         clearInterval(interval);
+                        this.cleanCoords();
                         this.showModal();
                     }
                     if (this.state.markerPosition.latitude !== global.locationOnStateChange.coords.latitude && this.state.markerPosition.longitude !== global.locationOnStateChange.coords.longitude) {
