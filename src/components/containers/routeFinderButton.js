@@ -7,7 +7,7 @@ export default class RouteFinderButton extends React.Component {
         super(props);
 
         this.state = {
-            text: 'find Route',
+            text: 'Routes',
         }
     }
 

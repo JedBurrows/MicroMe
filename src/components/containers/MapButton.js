@@ -16,7 +16,6 @@ export default class MapButton extends React.Component {
 
     buttonPress() {
         this.props.handlePress();
-        this.changeText();
     }
 
     changeText() {

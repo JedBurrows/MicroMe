@@ -11,7 +11,8 @@ export default class PostRunModal extends React.Component {
 
         this.state = {
             modalVisible: this.props.modalVisible,
-            RouteName: String
+            RouteName: String,
+            saveButtonVisible: false
         }
     }
 
@@ -24,6 +25,18 @@ export default class PostRunModal extends React.Component {
     showModal = () => {
         this.setState({
             modalVisible: true
+        })
+    }
+
+    hideSaveButton = () => {
+        this.setState({
+            saveButtonVisible: false
+        })
+    }
+
+    showSaveButton = () => {
+        this.setState({
+            saveButtonVisible: true
         })
     }
 
@@ -60,6 +73,18 @@ export default class PostRunModal extends React.Component {
     }
 
     render() {
+        if (this.state.closeButtonVisible === true) {
+            closeButton =
+                <TouchableOpacity style={styles.button}
+                    onPress={() => {
+                        this.postRoute();
+                    }}>
+                    <Text style={styles.btnText}>Save Route</Text>
+                </TouchableOpacity>
+        }
+        else {
+            closeButton = null;
+        }
         return (
             <Modal
                 animationType="slide"
@@ -98,12 +123,12 @@ export default class PostRunModal extends React.Component {
                             }}>
                             <Text style={styles.btnText}>Save Route</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.closeButton}
+                        {<TouchableOpacity style={styles.closeButton}
                             onPress={() => {
                                 this.hideModal();
                             }}>
                             <Text style={styles.btnText}>Close</Text>
-                        </TouchableOpacity>
+                        </TouchableOpacity>}
                     </View>
                 </View>
             </Modal>
@@ -119,7 +144,7 @@ const styles = StyleSheet.create({
         alignSelf: 'stretch',
         alignItems: 'center',
     },
-    inner:{
+    inner: {
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',

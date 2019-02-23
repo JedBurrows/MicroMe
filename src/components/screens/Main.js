@@ -5,7 +5,7 @@ import Icon from 'react-native-vector-icons/Entypo';
 import MapView, { Marker, Polyline as MapPolyline, AnimatedRegion } from "react-native-maps";
 import { MapButton, PostRunModal, RouteFinderButton, RouteFinderModal } from "../containers/";
 import Polyline from '@mapbox/polyline';
-import { _runKalmanOnLocations } from '../../helperFunctions';
+import { _calcGreatCircleDistance } from '../../helperFunctions/calcGreatCircleDistance';
 
 const screen = Dimensions.get('window');
 const ASPECT_RATIO = screen.width / screen.height;
@@ -33,10 +33,8 @@ class Main extends Component {
         this.modalElement = React.createRef();
         this.routeModalElement = React.createRef();
         this.routeFinderButton = React.createRef();
+        this.trackerButton = React.createRef();
         this.state = {
-            enabled: Boolean,
-            isMoving: Boolean,
-            showsUserLocation: false,
             locations: [],
             region: {
                 latitude: 0,
@@ -54,8 +52,10 @@ class Main extends Component {
             appState: AppState.currentState,
             interval: null,
             hasAnimated: false,
-            loadedRoute:[],
-            showRouteModal: false
+            loadedRoute: [],
+            showRouteModal: false,
+            isWalkingtoRoute: false,
+            compareRoute: false
         }
         this.handlePress = this.handlePress.bind(this);
     }
@@ -70,13 +70,12 @@ class Main extends Component {
         const options = {
             accuracy: Location.Accuracy.BestForNavigation,
             timeInterval: 2000,
-            distanceInterval: 0
+            distanceInterval: 5
         }
         AppState.addEventListener('change', this._handleAppStateChange);
         Location.startLocationUpdatesAsync(LOCATION_TASK_NAME, options);
         const interval = setInterval(this._getLocationAsync, 1000);
         this.setState({ interval })
-        alert('newVersion 6');
         global.locationOnStateChange = {
             coords: {
                 latitude: 0,
@@ -204,12 +203,18 @@ class Main extends Component {
 
     handleMapButtonPress = () => {
         this.setState({ isTracking: !this.state.isTracking }, () => {
+            this.trackerButton.current.changeText();
             if (this.state.isTracking === true) {
                 alert('beginning tracking');
                 let interval = setInterval(() => {
                     if (this.state.isTracking === false) {
                         alert("stopping tracking");
                         clearInterval(interval);
+                        if (this.state.compareRoute === true) {
+                            if (this.checkRoute() === true) {
+                                this.modalElement.current.hideSaveButton();
+                            }
+                        }
                         this.showRouteDebreifModal();
                     }
                     if (this.state.markerPosition.latitude !== global.locationOnStateChange.coords.latitude && this.state.markerPosition.longitude !== global.locationOnStateChange.coords.longitude) {
@@ -267,8 +272,42 @@ class Main extends Component {
 
     getRoutePress = (item) => {
         this.setState({
-            loadedRoute: JSON.parse(item.RouteJSON)
+            loadedRoute: JSON.parse(item.RouteJSON),
+            isWalkingtoRoute: true
+        }, () => {
+            const interval = setInterval(() => {
+                const distance = _calcGreatCircleDistance(this.state.loadedRoute[0], this.state.markerPosition);
+                console.log('distance: ' + distance);
+                if (distance < 10) {
+                    this.setState({
+                        isWalkingtoRoute: false
+                    })
+                    alert('you can start!');
+                    clearInterval(interval);
+                    this.handleMapButtonPress();
+                    this.setState({
+                        compareRoute: true
+                    })
+                }
+            }, 2000)
+
         })
+        alert('please make your way to the start point');
+    }
+
+    checkRoute = () => {
+        let inRoute = false;
+        for (let i = 0; i < this.state.coords.length; i++) {
+            for (let j = 0; i < this.state.loadedRoute.length; j++) {
+                inRoute = false;
+                let distance = Math.floor(_calcGreatCircleDistance(this.state.coords[i], this.state.loadedRoute[j]));
+                if (distance < 10) {
+                    inRoute = true;
+                }
+            }
+        }
+        console.log('check route: ' + inRoute);
+        return inRoute;
     }
 
     onRegionChange(region) {
@@ -320,7 +359,7 @@ class Main extends Component {
 
                 </MapView>
                 <View>
-                    {/* <MapButton style={{
+                    <MapButton style={{
                         position: "absolute",
                         borderWidth: 1,
                         borderColor: 'rgba(0,0,0,0.2)',
@@ -332,10 +371,12 @@ class Main extends Component {
                         borderRadius: 40,
                         top: 200,
                         left: 100
-                    }} handlePress={this.handleMapButtonPress.bind(this)} /> */}
+                    }} handlePress={this.handleMapButtonPress.bind(this)}
+                        ref={this.trackerButton} />
                 </View>
                 <View>
-                    <RouteFinderButton style={{position: "absolute",
+                    <RouteFinderButton style={{
+                        position: "absolute",
                         borderWidth: 1,
                         borderColor: 'rgba(0,0,0,0.2)',
                         alignItems: 'center',
@@ -344,15 +385,16 @@ class Main extends Component {
                         height: 80,
                         backgroundColor: '#fff',
                         borderRadius: 40,
-                        top: 200,
-                        left: 100}}
-                        onPress={this.handleRouteButtonPress.bind(this)}/>
+                        top: 100,
+                        left: 100
+                    }}
+                        onPress={this.handleRouteButtonPress.bind(this)} />
                 </View>
-                {/* <View style={styles.modal}>
-                    <PostRunModal modalVisible={false} coords={this.state.coords} ref={this.modalElement} username={this.props.navigation.getParam('username', '')} />
-                </View> */}
                 <View style={styles.modal}>
-                    <RouteFinderModal modalVisible={this.state.showRouteModal} handlePress={this.getRoutePress.bind(this)} ref={this.routeFinderButton}/>
+                    <PostRunModal modalVisible={false} coords={this.state.coords} ref={this.modalElement} username={this.props.navigation.getParam('username', '')} />
+                </View>
+                <View style={styles.modal}>
+                    <RouteFinderModal modalVisible={this.state.showRouteModal} handlePress={this.getRoutePress.bind(this)} ref={this.routeFinderButton} />
                 </View>
             </View>
         )

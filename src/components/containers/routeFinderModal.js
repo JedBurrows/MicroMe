@@ -40,6 +40,11 @@ export default class RouteFinderModal extends React.Component {
         })
     }
 
+    onPress = (item) => {
+        this.props.handlePress(item);
+        this.hideModal();
+    }
+
     makeRequest = () => {
         fetch('http://151.231.2.64:3000/users/getRoutes')
             .then(res => res.json())
@@ -73,7 +78,7 @@ export default class RouteFinderModal extends React.Component {
                             data={this.state.data}
                             renderItem={({ item }) => (
                                 <ListItem
-                                    button onPress={() => this.props.handlePress(item)} 
+                                    button onPress={() => this.onPress(item)} 
                                     roundAvatar
                                     title={`${item.Name}`}
                                     subtitle={item.routeCreator}
