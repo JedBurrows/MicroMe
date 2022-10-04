@@ -9,7 +9,7 @@
   "dependencies": {
     "@mapbox/polyline": "^1.0.0",
     "cors": "^2.8.5",
-    "expo": "^32.0.0",
+    "expo": "^46.0.14",
     "express": "^4.16.4",
     "mysql": "^2.16.0",
     "npm": "^6.5.0",
